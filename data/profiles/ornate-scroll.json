@@ -1,0 +1,82 @@
+{
+  "$schema": "./schema.json",
+  "id": "ornate-scroll",
+  "name": "Ornate Scroll",
+  "description": "Decorative sweeping cove with scroll-inspired arcs and a deep reveal.",
+  "units": "mm",
+  "dimensions": {
+    "width": 75,
+    "height": 35,
+    "depth": 45
+  },
+  "start": {
+    "x": 0,
+    "y": 0
+  },
+  "contour": [
+    {
+      "type": "line",
+      "to": {
+        "x": 70,
+        "y": 0
+      }
+    },
+    {
+      "type": "arc",
+      "to": {
+        "x": 75,
+        "y": 5
+      },
+      "radius": 6,
+      "clockwise": false
+    },
+    {
+      "type": "arc",
+      "to": {
+        "x": 70,
+        "y": 14
+      },
+      "radius": 8,
+      "clockwise": true
+    },
+    {
+      "type": "line",
+      "to": {
+        "x": 62,
+        "y": 22
+      }
+    },
+    {
+      "type": "arc",
+      "to": {
+        "x": 48,
+        "y": 30
+      },
+      "radius": 18,
+      "clockwise": true
+    },
+    {
+      "type": "line",
+      "to": {
+        "x": 0,
+        "y": 30
+      }
+    },
+    {
+      "type": "line",
+      "to": {
+        "x": 0,
+        "y": 0
+      }
+    }
+  ],
+  "metadata": {
+    "finish": "Antique silver leaf",
+    "tags": [
+      "ornate",
+      "scroll",
+      "premium"
+    ],
+    "notes": "Generous arcs evoke traditional European mouldings."
+  }
+}
