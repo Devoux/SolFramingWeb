@@ -1,0 +1,68 @@
+{
+  "$schema": "./schema.json",
+  "id": "beveled-step",
+  "name": "Beveled Step",
+  "description": "Features a stepped reveal with a soft bevel transitioning to the face.",
+  "units": "mm",
+  "dimensions": {
+    "width": 60,
+    "height": 30,
+    "depth": 35
+  },
+  "start": {
+    "x": 0,
+    "y": 0
+  },
+  "contour": [
+    {
+      "type": "line",
+      "to": {
+        "x": 60,
+        "y": 0
+      }
+    },
+    {
+      "type": "line",
+      "to": {
+        "x": 60,
+        "y": 18
+      }
+    },
+    {
+      "type": "line",
+      "to": {
+        "x": 55,
+        "y": 23
+      }
+    },
+    {
+      "type": "line",
+      "to": {
+        "x": 45,
+        "y": 30
+      }
+    },
+    {
+      "type": "line",
+      "to": {
+        "x": 0,
+        "y": 30
+      }
+    },
+    {
+      "type": "line",
+      "to": {
+        "x": 0,
+        "y": 0
+      }
+    }
+  ],
+  "metadata": {
+    "finish": "Brushed gold",
+    "tags": [
+      "classic",
+      "beveled"
+    ],
+    "reference": "BF-2001"
+  }
+}
