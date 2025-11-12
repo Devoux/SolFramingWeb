@@ -1,4 +1,9 @@
-export type Profile = {
+import type { Dirent } from 'node:fs';
+import { promises as fs, readdirSync, readFileSync } from 'node:fs';
+import path from 'node:path';
+import { z, type ZodIssue } from 'zod';
+
+export type ProfileSummary = {
   slug: string;
   name: string;
   title: string;
@@ -7,51 +12,40 @@ export type Profile = {
   thumbnail: string;
 };
 
-const profiles: Profile[] = [
+const PROFILE_SUMMARIES: ProfileSummary[] = [
   {
-    slug: "aurora-lee",
-    name: "Aurora Lee",
-    title: "Mixed Media Visionary",
-    description:
-      "Aurora blends analog textures with digital gradients to create immersive dreamscapes.",
-    heroColor: "from-purple-400 via-fuchsia-500 to-orange-300",
-    thumbnail:
-      "https://images.unsplash.com/photo-1526481280695-3c4693fcf66d?auto=format&fit=crop&w=640&q=80"
+    slug: 'aurora-lee',
+    name: 'Aurora Lee',
+    title: 'Mixed Media Visionary',
+    description: 'Aurora blends analog textures with digital gradients to create immersive dreamscapes.',
+    heroColor: 'from-purple-400 via-fuchsia-500 to-orange-300',
+    thumbnail: 'https://images.unsplash.com/photo-1526481280695-3c4693fcf66d?auto=format&fit=crop&w=640&q=80'
   },
   {
-    slug: "marco-fernandez",
-    name: "Marco Fernandez",
-    title: "Minimalist Photographer",
-    description:
-      "Marco captures architectural silhouettes and the interplay of sunlight across modern cities.",
-    heroColor: "from-sky-400 via-primary-500 to-emerald-300",
-    thumbnail:
-      "https://images.unsplash.com/photo-1487412947147-5cebf100ffc2?auto=format&fit=crop&w=640&q=80"
+    slug: 'marco-fernandez',
+    name: 'Marco Fernandez',
+    title: 'Minimalist Photographer',
+    description: 'Marco captures architectural silhouettes and the interplay of sunlight across modern cities.',
+    heroColor: 'from-sky-400 via-primary-500 to-emerald-300',
+    thumbnail: 'https://images.unsplash.com/photo-1487412947147-5cebf100ffc2?auto=format&fit=crop&w=640&q=80'
   },
   {
-    slug: "sylvie-park",
-    name: "Sylvie Park",
-    title: "Ceramic Storyteller",
-    description:
-      "Sylvie sculpts tactile narratives that celebrate organic textures and ancient motifs.",
-    heroColor: "from-amber-300 via-rose-300 to-primary-500",
-    thumbnail:
-      "https://images.unsplash.com/photo-1526498460520-4c246339dccb?auto=format&fit=crop&w=640&q=80"
+    slug: 'sylvie-park',
+    name: 'Sylvie Park',
+    title: 'Ceramic Storyteller',
+    description: 'Sylvie sculpts tactile narratives that celebrate organic textures and ancient motifs.',
+    heroColor: 'from-amber-300 via-rose-300 to-primary-500',
+    thumbnail: 'https://images.unsplash.com/photo-1526498460520-4c246339dccb?auto=format&fit=crop&w=640&q=80'
   }
 ];
 
-export async function listProfiles(): Promise<Profile[]> {
-  return profiles;
+export async function listProfiles(): Promise<ProfileSummary[]> {
+  return PROFILE_SUMMARIES;
 }
 
-export async function getProfile(slug: string): Promise<Profile | undefined> {
-  return profiles.find((profile) => profile.slug === slug);
-import { promises as fs } from 'node:fs';
-import { readdirSync, readFileSync } from 'node:fs';
-import path from 'node:path';
-import { z, type ZodIssue } from 'zod';
-
-import type { Dirent } from 'node:fs';
+export async function getProfile(slug: string): Promise<ProfileSummary | undefined> {
+  return PROFILE_SUMMARIES.find((profile) => profile.slug === slug);
+}
 
 const unitsSchema = z.enum(['mm', 'cm', 'm', 'in', 'ft']);
 
@@ -89,7 +83,7 @@ const profileMetadataSchema = z
   .strict()
   .optional();
 
-export const profileSchema = z
+export const profileDefinitionSchema = z
   .object({
     $schema: z.string().optional(),
     id: z.string().min(1),
@@ -110,11 +104,7 @@ export const profileSchema = z
   })
   .strict();
 
-export type Point = z.infer<typeof pointSchema>;
-export type LineCommand = z.infer<typeof lineCommandSchema>;
-export type ArcCommand = z.infer<typeof arcCommandSchema>;
-export type ContourElement = z.infer<typeof contourElementSchema>;
-export type Profile = z.infer<typeof profileSchema>;
+export type ProfileDefinition = z.infer<typeof profileDefinitionSchema>;
 
 const DEFAULT_PROFILES_DIRECTORY = path.resolve(process.cwd(), 'data', 'profiles');
 const SCHEMA_FILE_NAME = 'schema.json';
@@ -144,21 +134,21 @@ export class ProfileParseError extends Error {
   }
 }
 
-export async function loadProfiles(options: ProfileLoaderOptions = {}): Promise<Profile[]> {
+export async function loadProfiles(options: ProfileLoaderOptions = {}): Promise<ProfileDefinition[]> {
   const { directory = DEFAULT_PROFILES_DIRECTORY, includeSchema = false } = options;
   const entries = await fs.readdir(directory, { withFileTypes: true });
   const files = filterProfileFiles(entries, includeSchema).map((entry) => path.join(directory, entry.name));
   return Promise.all(files.map((file) => readProfileFile(file)));
 }
 
-export function loadProfilesSync(options: ProfileLoaderOptions = {}): Profile[] {
+export function loadProfilesSync(options: ProfileLoaderOptions = {}): ProfileDefinition[] {
   const { directory = DEFAULT_PROFILES_DIRECTORY, includeSchema = false } = options;
   const entries = readdirSync(directory, { withFileTypes: true });
   const files = filterProfileFiles(entries, includeSchema).map((entry) => path.join(directory, entry.name));
   return files.map((file) => readProfileFileSync(file));
 }
 
-async function readProfileFile(filePath: string): Promise<Profile> {
+async function readProfileFile(filePath: string): Promise<ProfileDefinition> {
   let raw: string;
   try {
     raw = await fs.readFile(filePath, 'utf8');
@@ -173,7 +163,7 @@ async function readProfileFile(filePath: string): Promise<Profile> {
     throw new ProfileParseError(filePath, error);
   }
 
-  const result = profileSchema.safeParse(payload);
+  const result = profileDefinitionSchema.safeParse(payload);
   if (!result.success) {
     throw new ProfileValidationError(filePath, result.error.issues);
   }
@@ -181,7 +171,7 @@ async function readProfileFile(filePath: string): Promise<Profile> {
   return result.data;
 }
 
-function readProfileFileSync(filePath: string): Profile {
+function readProfileFileSync(filePath: string): ProfileDefinition {
   let raw: string;
   try {
     raw = readFileSync(filePath, 'utf8');
@@ -196,7 +186,7 @@ function readProfileFileSync(filePath: string): Profile {
     throw new ProfileParseError(filePath, error);
   }
 
-  return profileSchema.parse(payload);
+  return profileDefinitionSchema.parse(payload);
 }
 
 function filterProfileFiles(entries: Dirent[], includeSchema: boolean): Dirent[] {
