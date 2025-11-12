@@ -1,19 +1,7 @@
+import Image from 'next/image';
 import Link from 'next/link';
 
-export default function HomePage() {
-  return (
-    <section className="page-section">
-      <h1 className="page-title">Welcome to Sol Framing</h1>
-      <p className="page-lede">
-        Prototype tooling for experimenting with moulding profiles and frame layouts. Use the Virtual
-        Framing lab to visualise how a contour sweeps around a painting at true scale.
-      </p>
-      <Link href="/virtual-framing" className="button-primary">
-        Open Virtual Framing
-      </Link>
-import Link from "next/link";
-import Image from "next/image";
-import { listProfiles } from "@/lib/profiles";
+import { listProfiles } from '@/lib/profiles';
 
 export default async function HomePage() {
   const profiles = await listProfiles();
@@ -25,8 +13,8 @@ export default async function HomePage() {
           Featured creators
         </h1>
         <p className="max-w-2xl text-base text-slate-600">
-          Browse our curated roster of artists and makers to find the perfect match for your
-          next virtual framing session.
+          Browse our curated roster of artists and makers to find the perfect match for your next
+          virtual framing session.
         </p>
       </div>
 
@@ -42,7 +30,7 @@ export default async function HomePage() {
                 src={profile.thumbnail}
                 alt=""
                 fill
-                className="object-cover opacity-80 mix-blend-overlay"
+                className="object-cover opacity-80 mix-blend-overlay transition duration-200 group-hover:scale-105"
                 priority
               />
             </div>
@@ -57,7 +45,7 @@ export default async function HomePage() {
               <div className="mt-auto flex items-center justify-between pt-4">
                 <Link
                   href={`/profiles/${profile.slug}`}
-                  className="text-sm font-semibold text-primary-600 hover:text-primary-700"
+                  className="text-sm font-semibold text-primary-600 transition hover:text-primary-700"
                 >
                   View profile
                 </Link>
