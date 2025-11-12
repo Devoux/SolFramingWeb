@@ -1,0 +1,53 @@
+{
+  "$schema": "./schema.json",
+  "id": "simple-flat",
+  "name": "Simple Flat",
+  "description": "A minimal rectangular face with no bevels or ornamentation.",
+  "units": "mm",
+  "dimensions": {
+    "width": 50,
+    "height": 20
+  },
+  "start": {
+    "x": 0,
+    "y": 0
+  },
+  "contour": [
+    {
+      "type": "line",
+      "to": {
+        "x": 50,
+        "y": 0
+      }
+    },
+    {
+      "type": "line",
+      "to": {
+        "x": 50,
+        "y": 20
+      }
+    },
+    {
+      "type": "line",
+      "to": {
+        "x": 0,
+        "y": 20
+      }
+    },
+    {
+      "type": "line",
+      "to": {
+        "x": 0,
+        "y": 0
+      }
+    }
+  ],
+  "metadata": {
+    "finish": "Matte black",
+    "tags": [
+      "modern",
+      "minimal"
+    ],
+    "notes": "Basic rectangular profile suitable for contemporary frames."
+  }
+}

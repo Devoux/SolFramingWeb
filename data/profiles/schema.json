@@ -1,0 +1,200 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://example.com/schemas/profile.json",
+  "title": "Frame Profile",
+  "description": "Describes a picture frame profile using a 2D contour comprised of line and arc commands.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "name",
+    "units",
+    "dimensions",
+    "contour"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Stable identifier for the profile."
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Human readable name for the profile."
+    },
+    "description": {
+      "type": "string",
+      "description": "Long form description of the profile."
+    },
+    "units": {
+      "type": "string",
+      "enum": [
+        "mm",
+        "cm",
+        "m",
+        "in",
+        "ft"
+      ],
+      "description": "Measurement units used for all coordinates and dimensions."
+    },
+    "version": {
+      "type": "string",
+      "description": "Optional semantic version of the profile definition."
+    },
+    "dimensions": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "width",
+        "height"
+      ],
+      "properties": {
+        "width": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "description": "Overall width of the profile."
+        },
+        "height": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "description": "Overall height of the profile."
+        },
+        "depth": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "description": "Optional depth or thickness measurement."
+        }
+      }
+    },
+    "start": {
+      "$ref": "#/$defs/point",
+      "description": "Optional start point of the contour. Defaults to the origin when omitted."
+    },
+    "contour": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/contourElement"
+      },
+      "description": "Closed contour defined by sequential drawing commands."
+    },
+    "metadata": {
+      "$ref": "#/$defs/profileMetadata",
+      "description": "Optional presentation metadata such as finish or tags."
+    }
+  },
+  "$defs": {
+    "point": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "x",
+        "y"
+      ],
+      "properties": {
+        "x": {
+          "type": "number",
+          "description": "X coordinate."
+        },
+        "y": {
+          "type": "number",
+          "description": "Y coordinate."
+        }
+      }
+    },
+    "lineCommand": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "to"
+      ],
+      "properties": {
+        "type": {
+          "const": "line"
+        },
+        "to": {
+          "$ref": "#/$defs/point"
+        },
+        "metadata": {
+          "type": "object",
+          "description": "Optional per-segment metadata.",
+          "additionalProperties": true
+        }
+      }
+    },
+    "arcCommand": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "to",
+        "radius",
+        "clockwise"
+      ],
+      "properties": {
+        "type": {
+          "const": "arc"
+        },
+        "to": {
+          "$ref": "#/$defs/point"
+        },
+        "radius": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "description": "Radius of the arc."
+        },
+        "clockwise": {
+          "type": "boolean",
+          "description": "Direction of the arc sweep."
+        },
+        "largeArc": {
+          "type": "boolean",
+          "description": "Whether the arc spans more than 180 degrees."
+        },
+        "metadata": {
+          "type": "object",
+          "description": "Optional per-segment metadata.",
+          "additionalProperties": true
+        }
+      }
+    },
+    "contourElement": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/lineCommand"
+        },
+        {
+          "$ref": "#/$defs/arcCommand"
+        }
+      ]
+    },
+    "profileMetadata": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "finish": {
+          "type": "string",
+          "description": "Finish name for the profile."
+        },
+        "notes": {
+          "type": "string",
+          "description": "Additional notes about the profile."
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "description": "Categorization tags for the profile."
+        },
+        "reference": {
+          "type": "string",
+          "description": "External catalogue reference or SKU."
+        }
+      }
+    }
+  }
+}
