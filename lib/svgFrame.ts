@@ -104,7 +104,7 @@ function collectFaceOffsets(segments: SegmentComputation[]): number[] {
   const offsets = new Set<number>();
   offsets.add(0);
   segments.forEach(({ end }) => {
-    offsets.add(round(end.x));
+    offsets.add(round(Math.abs(end.x)));
   });
   return Array.from(offsets).sort((a, b) => a - b);
 }
@@ -153,96 +153,69 @@ function rectElement(width: number, height: number, attributes: Record<string, s
 export function generateFrameSvg(
   painting: PaintingDimensions,
   profile: ProfileContour,
-  options?: { marginRatio?: number; highlightColor?: string; strokeColor?: string; backgroundColor?: string; paintingFill?: string }
+  options?: { marginRatio?: number; edgePad?: number }
 ): FrameSvgResult {
   if (painting.width <= 0 || painting.height <= 0) {
     throw new Error('Painting dimensions must be positive numbers.');
   }
 
   const marginRatio = options?.marginRatio ?? 0.12;
-  const highlightColor = options?.highlightColor ?? '#e5e7eb';
-  const strokeColor = options?.strokeColor ?? '#1f2937';
-  const backgroundColor = options?.backgroundColor ?? '#0f172a';
-  const paintingFill = options?.paintingFill ?? '#f8fafc';
+  const edgePad = options?.edgePad ?? 0.02; // small pad in base units to avoid clip of strokes
 
   const segments = computeSegments(profile);
-  const offsets = collectFaceOffsets(segments);
-  const rectangles: FrameRectangle[] = offsets.map((offset) => ({
+  // Collect event offsets where contour direction changes (line/arc transitions and line-to-line bends).
+  const eventOffsetSet = new Set<number>();
+  segments.forEach((segment, index) => {
+    const next = segments[index + 1];
+    if (!next) return;
+    const reason = describeTransitionReason(segment.segment, next.segment, angleOf(segment.vector), angleOf(next.vector));
+    if (reason === 'coplanar-line') return;
+    const at = round(Math.abs(segment.end.x));
+    eventOffsetSet.add(at);
+  });
+  const eventOffsets = Array.from(eventOffsetSet).sort((a, b) => a - b);
+  const rectangles: FrameRectangle[] = eventOffsets.map((offset) => ({
     offset,
     width: round(painting.width + offset * 2),
     height: round(painting.height + offset * 2)
   }));
-
   const highlightBands: HighlightBand[] = [];
-  segments.forEach((segment, index) => {
-    const next = segments[index + 1];
-    if (!next) {
-      return;
-    }
-    const reason = describeTransitionReason(segment.segment, next.segment, angleOf(segment.vector), angleOf(next.vector));
-    if (!shouldHighlightTransition(reason)) {
-      return;
-    }
-    const innerOffset = round(segment.end.x);
-    const outerOffset = round(next.end.x);
-    if (outerOffset === innerOffset) {
-      return;
-    }
-    const fromOffset = Math.min(innerOffset, outerOffset);
-    const toOffset = Math.max(innerOffset, outerOffset);
-    highlightBands.push({ fromOffset, toOffset, reason });
-  });
 
-  const maxOffset = offsets[offsets.length - 1] ?? 0;
+  const maxOffset = eventOffsets[eventOffsets.length - 1] ?? 0;
   const outerWidth = painting.width + maxOffset * 2;
   const outerHeight = painting.height + maxOffset * 2;
-  const viewBox = buildViewBox(outerWidth, outerHeight, marginRatio);
+  const minX = -outerWidth / 2 - edgePad;
+  const minY = -outerHeight / 2 - edgePad;
+  const vbWidth = outerWidth + edgePad * 2;
+  const vbHeight = outerHeight + edgePad * 2;
+  const viewBox = `${round(minX)} ${round(minY)} ${round(vbWidth)} ${round(vbHeight)}`;
 
   const shapes: string[] = [];
-  shapes.push(
-    rectElement(outerWidth + outerWidth * marginRatio * 2, outerHeight + outerHeight * marginRatio * 2, {
-      fill: backgroundColor,
-      'aria-hidden': 'true'
-    })
-  );
 
-  highlightBands.forEach((band) => {
-    const midOffset = (band.fromOffset + band.toOffset) / 2;
-    const width = painting.width + midOffset * 2;
-    const height = painting.height + midOffset * 2;
-    const strokeWidth = Math.abs(band.toOffset - band.fromOffset);
-    shapes.push(
-      rectElement(width, height, {
-        fill: 'none',
-        stroke: highlightColor,
-        'stroke-width': round(strokeWidth),
-        'vector-effect': 'non-scaling-stroke',
-        'stroke-linejoin': 'round',
-        'data-band-reason': band.reason
-      })
-    );
-  });
-
-  rectangles
-    .filter((rect) => rect.offset > 0)
-    .reverse()
-    .forEach((rect) => {
+  // Event rectangles: thin gray lines, innermost and outermost emphasized in black and thicker stroke
+  if (rectangles.length > 0) {
+    const first = rectangles[0].offset;
+    const last = rectangles[rectangles.length - 1].offset;
+    rectangles.forEach((rect) => {
+      const isEdge = rect.offset === first || rect.offset === last;
       shapes.push(
         rectElement(rect.width, rect.height, {
           fill: 'none',
-          stroke: strokeColor,
-          'stroke-width': 1,
+          stroke: isEdge ? '#000000' : '#9ca3af',
+          'stroke-width': isEdge ? 2 : 1,
           'vector-effect': 'non-scaling-stroke',
           'stroke-linejoin': 'round',
-          'data-face-offset': rect.offset
+          'data-event-offset': rect.offset
         })
       );
     });
+  }
 
+  // Painting (canvas): white fill, thin black stroke
   shapes.push(
     rectElement(painting.width, painting.height, {
-      fill: paintingFill,
-      stroke: '#111827',
+      fill: '#ffffff',
+      stroke: '#000000',
       'stroke-width': 1,
       'vector-effect': 'non-scaling-stroke',
       'data-role': 'painting'
@@ -250,7 +223,7 @@ export function generateFrameSvg(
   );
 
   const svg = [
-    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${viewBox}" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Virtual frame preview">`,
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${viewBox}" preserveAspectRatio="xMinYMid meet" role="img" aria-label="Virtual frame preview" width="100%" height="100%">`,
     ...shapes,
     '</svg>'
   ].join('');

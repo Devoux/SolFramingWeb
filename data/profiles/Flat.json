@@ -1,0 +1,19 @@
+{
+  "$schema": "./schema.json",
+  "id": "flat",
+  "name": "Flat",
+  "description": "3\" wide × 1.5\" tall rectangular profile.",
+  "units": "in",
+  "dimensions": {
+    "width": 3.0,
+    "height": 1.5
+  },
+  "start": { "x": 0, "y": 0 },
+  "contour": [
+    { "type": "line", "to": { "x": -3.0, "y": 0.0 } },
+    { "type": "line", "to": { "x": -3.0, "y": 1.5 } },
+    { "type": "line", "to": { "x": 0.0, "y": 1.5 } },
+    { "type": "line", "to": { "x": 0.0, "y": 0.0 } }
+  ]
+}
+
